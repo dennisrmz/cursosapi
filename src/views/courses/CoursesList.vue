@@ -48,12 +48,12 @@
             </button>
         </li>
     </ul>
-    {{ page }}
+
     <!-- Paginacion -->
     <div class="d-flex justify-content-center">
         <nav aria-label="...">
             <ul class="pagination">
-                <li v-for="pagination_link in pagination_links" class="page-item" 
+                <li v-for="pagination_link in pagination.links" class="page-item" 
                 :key="'pagination_link' + pagination_link.label"
                 :class="{ 
                     'disabled'  : pagination_link.url == null,
@@ -93,8 +93,9 @@ export default {
                 description: '',
                 category_id: '',
             },
+            pagination: {},
             errors: [],
-            pagination_links: [],
+          
         }
     },
     mounted() {
@@ -102,7 +103,18 @@ export default {
     },
     computed: {
         page(){
-            return this.$route.query.page ?? 1;
+            let page = this.$route.query.page ?? 1;
+
+            if(page > this.pagination.last_page){
+                this.$router.replace({
+                    query: {
+                        page: this.pagination.last_page
+                    }
+                      
+                });
+                return this.pagination.last_page;
+            }
+            return page;
         }
     },
     watch:{
@@ -124,11 +136,14 @@ export default {
             });
         },
         getCourses() {
-            this.axios.get('http://127.0.0.1:8000/api/courses?per_page=10&page=' + this.page)
+            this.axios.get('http://127.0.0.1:8000/api/courses?sort=-id&per_page=10&page=' + this.page )
                 .then(response => {
                     let res = response.data;
                     this.courses = res.data;
-                    this.pagination_links = res.links;
+                    this.pagination = {
+                        links :  res.links,
+                        last_page :  res.last_page
+                    }
 
 
                 })
@@ -147,10 +162,12 @@ export default {
         },
         saveCourse() {
             this.axios.post('http://127.0.0.1:8000/api/courses', this.course)
-                .then(response => {
-                    let course = response.data;
+                .then(() => {
 
-                    this.courses.push(course);
+                    // let course = response.data;
+                    // this.courses.push(course);
+                    this.getCourses();
+
                     this.course = {
                         title: '',
                         description: '',
@@ -169,7 +186,7 @@ export default {
         deleteCourse(id) {
             this.axios.delete('http://127.0.0.1:8000/api/courses/' + id)
                 .then(() => {
-                    this.courses = this.courses.filter(course => course.id != id)
+                    this.getCourses();
                 })
                 .catch(error => {
                     console.log(error)
