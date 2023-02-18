@@ -1,84 +1,83 @@
 <template>
+    <div class="container">
+        <h1>Listado de cursos</h1>
+        <ul v-if="errors.length > 0">
+            <li v-for="(error, index) in errors" :key="index">
+                {{ error }}
+            </li>
+        </ul>
 
-    <h1>Listado de cursos</h1>
-    <ul v-if="errors.length > 0">
-        <li v-for="(error, index) in errors" :key="index">
-            {{ error }}
-        </li>
-    </ul>
-
-
-    <form @submit.prevent="saveCourse" class="mb-4">
-        <div class="mb-2">
-            <label for="title">Titulo</label> <br>
-            <input id="title" type="text" placeholder="Ingrese el titulo del curso" v-model="course.title">
+        <div class="card mb-4">
+            <form @submit.prevent="saveCourse" class=" card-body">
+                <div class="mb-2">
+                    <label for="title">Titulo</label> <br>
+                    <input class="form-control" id="title" type="text" placeholder="Ingrese el titulo del curso" v-model="course.title">
+                </div>
+                <div class="mb-2">
+                    <label for="description">Descripcion</label> <br>
+                    <textarea class="form-control" id="description" type="text" placeholder="Ingrese la descripcion del curso"
+                        v-model="course.description"></textarea>
+                </div>
+                <div class="mb-2">
+                    <label for="category">Categoria</label> <br>
+                    <select class="form-control" name="category" id="category" v-model="course.category_id">
+                        <option value="" selected disabled>Seleccione una categoria</option>
+                        <option v-for="category in categories" :value="category.id" :key="'category-' + category.id">
+                            {{ category.name }}
+                        </option>
+                    </select>
+                </div>
+    
+                <br>
+    
+                <button class="btn btn-primary btn-sm" type="submit">Guardar</button>
+    
+            </form>
         </div>
-        <div class="mb-2">
-            <label for="description">Descripcion</label> <br>
-            <textarea id="description" type="text" placeholder="Ingrese la descripcion del curso"
-                v-model="course.description"></textarea>
+
+        <div class="mb-4">
+            <h2>Buscador</h2>
+            <input type="text" v-model="search" name="" id="" placeholder="Ingrese una palabra para filtrar" class="form-control">
         </div>
-        <div class="mb-2">
-            <label for="category">Categoria</label> <br>
-            <select name="category" id="category" v-model="course.category_id">
-                <option value="" selected disabled>Seleccione una categoria</option>
-                <option v-for="category in categories" :value="category.id" :key="'category-' + category.id">
-                    {{ category.name }}
-                </option>
-            </select>
+        <ul>
+            <li v-for="(course) in courses" :key="'course-' + course.id" class="mb-2">
+                <router-link :to="{ name: 'CoursesDetails', params: { id: course.id } }">
+                    {{ course.title }}
+                </router-link>
+
+                -
+
+                <button @click="deleteCourse(course.id)" class="btn btn-danger btn-sm">
+                    Eliminar
+                </button>
+            </li>
+        </ul>
+
+        <!-- Paginacion -->
+        <div class="d-flex justify-content-center">
+            <nav aria-label="...">
+                <ul class="pagination">
+                    <li v-for="pagination_link in pagination.links" class="page-item"
+                        :key="'pagination_link' + pagination_link.label" :class="{
+                            'disabled': pagination_link.url == null,
+                            'active': pagination_link.active
+                        }">
+                        <a @click="changePage(pagination_link.url)" class="page-link" v-html="pagination_link.label"
+                            style="cursor:pointer;"></a>
+                    </li>
+                    <!-- <li class="page-item"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="#">2</a>
+                        </li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li> -->
+                </ul>
+            </nav>
         </div>
 
-        <br>
-
-        <button class="btn btn-primary btn-sm" type="submit">Guardar</button>
-
-    </form>
-
-    <h1>Courses</h1>
-    <ul>
-        <li v-for="(course) in courses" :key="'course-' + course.id" class="mb-2">
-            <router-link :to="{ name: 'CoursesDetails', params: { id: course.id } }">
-                {{ course.title }}
-            </router-link>
-
-            -
-
-            <button @click="deleteCourse(course.id)" class="btn btn-danger btn-sm">
-                Eliminar
-            </button>
-        </li>
-    </ul>
-
-    <!-- Paginacion -->
-    <div class="d-flex justify-content-center">
-        <nav aria-label="...">
-            <ul class="pagination">
-                <li v-for="pagination_link in pagination.links" class="page-item" 
-                :key="'pagination_link' + pagination_link.label"
-                :class="{ 
-                    'disabled'  : pagination_link.url == null,
-                    'active'    : pagination_link.active 
-                }"
-                
-                >
-                    <a 
-                        @click="changePage(pagination_link.url)"
-                        class="page-link" 
-                        v-html="pagination_link.label" 
-                        style="cursor:pointer;"></a>
-                </li>
-                <!-- <li class="page-item"><a class="page-link" href="#">1</a></li>
-                <li class="page-item active" aria-current="page">
-                    <a class="page-link" href="#">2</a>
-                </li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item">
-                    <a class="page-link" href="#">Next</a>
-                </li> -->
-            </ul>
-        </nav>
     </div>
-
 </template>
 
 <script>
@@ -95,30 +94,34 @@ export default {
             },
             pagination: {},
             errors: [],
-          
+            search: '',
+
         }
     },
     mounted() {
 
     },
     computed: {
-        page(){
+        page() {
             let page = this.$route.query.page ?? 1;
 
-            if(page > this.pagination.last_page){
+            if (page > this.pagination.last_page) {
                 this.$router.replace({
                     query: {
                         page: this.pagination.last_page
                     }
-                      
+
                 });
                 return this.pagination.last_page;
             }
             return page;
         }
     },
-    watch:{
-        page(){
+    watch: {
+        page() {
+            this.getCourses();
+        },
+        search(){
             this.getCourses();
         }
     },
@@ -127,22 +130,31 @@ export default {
         this.getCategories();
     },
     methods: {
-        changePage(url){
+        changePage(url) {
 
             this.$router.replace({
-                query:{
-                    page :url.split('page=')[1]
+                query: {
+                    page: url.split('page=')[1]
                 }
             });
         },
         getCourses() {
-            this.axios.get('http://127.0.0.1:8000/api/courses?sort=-id&per_page=10&page=' + this.page )
+            // this.axios.get('http://127.0.0.1:8000/api/courses?sort=-id&per_page=10&page=' + this.page + '&filter[title]=' + this.search)
+
+            this.axios.get('http://127.0.0.1:8000/api/courses', {
+                params: {
+                    sort: '-id',
+                    per_page: 10,
+                    page: this.page,
+                    'filter[title]' : this.search
+                }
+            })
                 .then(response => {
                     let res = response.data;
                     this.courses = res.data;
                     this.pagination = {
-                        links :  res.links,
-                        last_page :  res.last_page
+                        links: res.links,
+                        last_page: res.last_page
                     }
 
 
@@ -196,6 +208,4 @@ export default {
 }
 </script>
 
-<style>
-
-</style>
+<style></style>
