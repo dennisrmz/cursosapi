@@ -11,12 +11,13 @@
             <form @submit.prevent="saveCourse" class=" card-body">
                 <div class="mb-2">
                     <label for="title">Titulo</label> <br>
-                    <input class="form-control" id="title" type="text" placeholder="Ingrese el titulo del curso" v-model="course.title">
+                    <input class="form-control" id="title" type="text" placeholder="Ingrese el titulo del curso"
+                        v-model="course.title">
                 </div>
                 <div class="mb-2">
                     <label for="description">Descripcion</label> <br>
-                    <textarea class="form-control" id="description" type="text" placeholder="Ingrese la descripcion del curso"
-                        v-model="course.description"></textarea>
+                    <textarea class="form-control" id="description" type="text"
+                        placeholder="Ingrese la descripcion del curso" v-model="course.description"></textarea>
                 </div>
                 <div class="mb-2">
                     <label for="category">Categoria</label> <br>
@@ -27,17 +28,18 @@
                         </option>
                     </select>
                 </div>
-    
+
                 <br>
-    
+
                 <button class="btn btn-primary btn-sm" type="submit">Guardar</button>
-    
+
             </form>
         </div>
 
         <div class="mb-4">
             <h2>Buscador</h2>
-            <input type="text" v-model="search" name="" id="" placeholder="Ingrese una palabra para filtrar" class="form-control">
+            <input type="text" v-model="search" name="" id="" placeholder="Ingrese una palabra para filtrar"
+                class="form-control">
         </div>
         <ul>
             <li v-for="(course) in courses" :key="'course-' + course.id" class="mb-2">
@@ -81,8 +83,58 @@
 </template>
 
 <script>
-
+import { ref, computed, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 export default {
+
+
+
+    setup() {
+        const pagination = ref({});
+        const route = useRoute();
+        const router = useRouter();
+
+        watch(pagination, (newValue, oldValue) => {
+            console.log(newValue, oldValue);
+        });
+
+        //Propiedades computadas
+        const page = computed(() => {
+            let page = route.query.page ?? 1;
+            if (page > pagination.value.last_page) {
+                router.replace({
+                    query: {
+                        page: pagination.value.last_page
+                    }
+                });
+                return pagination.value.last_page;
+            }
+            return page;
+        });
+
+        //Metodos
+        const setPagination = (response) => {
+            pagination.value = {
+                links: response.links,
+                last_page: response.last_page
+            }
+        };
+        const changePage = (url) => {
+            router.replace({
+                query: {
+                    page: url.split('page=')[1]
+                }
+            });
+        }
+
+        return {
+            pagination,
+            setPagination,
+            page,
+            changePage,
+        }
+    },
+
     data() {
         return {
             courses: [],
@@ -92,7 +144,6 @@ export default {
                 description: '',
                 category_id: '',
             },
-            pagination: {},
             errors: [],
             search: '',
 
@@ -102,26 +153,13 @@ export default {
 
     },
     computed: {
-        page() {
-            let page = this.$route.query.page ?? 1;
 
-            if (page > this.pagination.last_page) {
-                this.$router.replace({
-                    query: {
-                        page: this.pagination.last_page
-                    }
-
-                });
-                return this.pagination.last_page;
-            }
-            return page;
-        }
     },
     watch: {
         page() {
             this.getCourses();
         },
-        search(){
+        search() {
             this.getCourses();
         }
     },
@@ -130,14 +168,7 @@ export default {
         this.getCategories();
     },
     methods: {
-        changePage(url) {
 
-            this.$router.replace({
-                query: {
-                    page: url.split('page=')[1]
-                }
-            });
-        },
         getCourses() {
             // this.axios.get('http://127.0.0.1:8000/api/courses?sort=-id&per_page=10&page=' + this.page + '&filter[title]=' + this.search)
 
@@ -146,16 +177,18 @@ export default {
                     sort: '-id',
                     per_page: 10,
                     page: this.page,
-                    'filter[title]' : this.search
+                    'filter[title]': this.search
                 }
             })
                 .then(response => {
                     let res = response.data;
                     this.courses = res.data;
-                    this.pagination = {
-                        links: res.links,
-                        last_page: res.last_page
-                    }
+
+                    this.setPagination(res);
+                    // this.pagination = {
+                    //     links: res.links,
+                    //     last_page: res.last_page
+                    // }
 
 
                 })
