@@ -1,11 +1,15 @@
 <template>
-  <nav>
+  <nav class="navigation">
     <router-link to="/">Home</router-link> |
-    <router-link :to="{name: 'CoursesList'}">Cursos</router-link> |
+    <router-link :to="{ name: 'CoursesList' }">Cursos</router-link> |
     <router-link to="/about">About</router-link>
-    
   </nav>
-  <router-view/>
+
+  <nav class="navigation">
+    <router-link :to="{ name: 'login' }">Login</router-link> |
+    <router-link :to="{ name: 'register' }">Register</router-link> 
+  </nav>
+  <router-view />
 </template>
 
 <style>
@@ -18,7 +22,7 @@
 }
 
 nav {
-  padding: 30px;
+  margin: 30px;
 }
 
 nav a {
