@@ -16,6 +16,17 @@ const routes = [
     component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
   },
   {
+    path: '/dashboard',
+    name: 'dashboard',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/DashboardView.vue'),
+    meta:{
+      requiresAuth: true,
+    }
+  },
+  {
     path: '/courses',
     name: 'CoursesList',
     // route level code-splitting
@@ -45,7 +56,14 @@ const routes = [
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
-    component: () => import( '../views/auth/LoginView.vue')
+    component: () => import( '../views/auth/LoginView.vue'),
+    beforeEnter: (to, from, next) => {
+      if(localStorage.getItem('auth')){
+        next('dashboard')
+      }else{
+        next()
+      }
+    }
   },
   {
     path: '/register',
@@ -60,6 +78,15 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
+})
+
+router.beforeEach((to, from, next) => {
+  const protectedRoute = to.matched.some(record => record.meta.requiresAuth)
+  if(protectedRoute && !localStorage.getItem('auth')){
+    next('login');
+  }else{
+    next();
+  }
 })
 
 export default router

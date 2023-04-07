@@ -6,6 +6,10 @@
         {{ course.category.name }}
     </p>
 
+    <p>
+        <b>Autor:</b>
+        {{ user.name }}
+    </p>
     <router-link :to="{ name: 'CourseEdit', params: { id: course.id }}">
         Editar curso
     </router-link>
@@ -18,13 +22,10 @@ export default {
             course: {
                 title : "",
                 description: "",
-                category :{
-                    name : ""
-                },
-                id: 0
-                
+                category : { name : "" },
+                id: 0,
             },
-            
+            user: {}
         }
     },
     mounted() {
@@ -35,9 +36,10 @@ export default {
     },
     methods: {
         getCourse() {
-            this.axios.get('http://127.0.0.1:8000/api/courses/' + this.$route.params.id + '?included=category')
+            this.axios.get('/api/v2/courses/' + this.$route.params.id + '?included=category,user')
                 .then(response => {
                     this.course = response.data
+                    this.user = response.data.user
                 })
                 .catch(error => {
                     console.log(error)

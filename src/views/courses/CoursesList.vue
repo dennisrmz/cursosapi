@@ -131,9 +131,9 @@ export default {
     methods: {
 
         getCourses() {
-            // this.axios.get('http://127.0.0.1:8000/api/courses?sort=-id&per_page=10&page=' + this.page + '&filter[title]=' + this.search)
+            // this.axios.get('/api/v2/courses?sort=-id&per_page=10&page=' + this.page + '&filter[title]=' + this.search)
 
-            this.axios.get('http://127.0.0.1:8000/api/courses', {
+            this.axios.get('/api/v2/courses', {
                 params: {
                     sort: '-id',
                     per_page: 10,
@@ -158,7 +158,7 @@ export default {
                 })
         },
         getCategories() {
-            this.axios.get('http://127.0.0.1:8000/api/categories')
+            this.axios.get('/api/v2/categories')
                 .then(response => {
                     this.categories = response.data
                 })
@@ -167,7 +167,7 @@ export default {
                 })
         },
         saveCourse() {
-            this.axios.post('http://127.0.0.1:8000/api/courses', this.course)
+            this.axios.post('/api/v2/courses', this.course)
                 .then(() => {
 
                     // let course = response.data;
@@ -182,7 +182,7 @@ export default {
                     this.errors = []
                 })
                 .catch(error => {
-                    console.log(error)
+                    console.log(error.response.data)
                     let errors = Object.values(error.response.data.errors).flat();
 
                     this.errors = errors;
@@ -190,7 +190,7 @@ export default {
                 })
         },
         deleteCourse(id) {
-            this.axios.delete('http://127.0.0.1:8000/api/courses/' + id)
+            this.axios.delete('/api/v2/courses/' + id)
                 .then(() => {
                     this.getCourses();
                 })
