@@ -10,13 +10,18 @@
         <b>Autor:</b>
         {{ user.name }}
     </p>
-    <router-link :to="{ name: 'CourseEdit', params: { id: course.id }}">
-        Editar curso
-    </router-link>
+    <div v-if="auth && user.id == auth.user.id">
+        <router-link :to="{ name: 'CourseEdit', params: { id: course.id }}">
+            Editar curso
+        </router-link>
+    </div>
+    
 </template>
 
 <script>
+import { mapState } from 'vuex';
 export default {
+    
     data() {
         return {
             course: {
@@ -33,6 +38,9 @@ export default {
     },
     created() {
         this.getCourse();
+    },
+    computed: {
+        ...mapState(['auth']), 
     },
     methods: {
         getCourse() {

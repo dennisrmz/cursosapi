@@ -7,7 +7,7 @@
             </li>
         </ul>
 
-        <div class="card mb-4">
+        <div v-if="auth" class="card mb-4">
             <form @submit.prevent="saveCourse" class=" card-body">
                 <div class="mb-2">
                     <label for="title">Titulo</label> <br>
@@ -49,7 +49,7 @@
 
                 -
 
-                <button @click="deleteCourse(course.id)" class="btn btn-danger btn-sm">
+                <button v-if="auth && auth.user.id === course.user.id" @click="deleteCourse(course.id)" class="btn btn-danger btn-sm">
                     Eliminar
                 </button>
             </li>
@@ -84,6 +84,8 @@
 
 <script>
 import usePagination from '@/composables/usePagination';
+import { mapState } from 'vuex';
+
 export default {
     setup() {
         const { pagination, page, setPagination, changePage } = usePagination();
@@ -114,6 +116,7 @@ export default {
 
     },
     computed: {
+        ...mapState(['auth']),
 
     },
     watch: {
@@ -135,6 +138,7 @@ export default {
 
             this.axios.get('/api/v2/courses', {
                 params: {
+                    included: 'user',
                     sort: '-id',
                     per_page: 10,
                     page: this.page,

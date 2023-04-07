@@ -1,7 +1,7 @@
 <template>
     <h1>Aqui podras editar un curso</h1>
 
-    <form @submit.prevent="updateCourse">
+    <form @submit.prevent="updateCourse" >
         <div>
             <label for="title">Titulo</label> <br>
             <input id="title" type="text" placeholder="Ingrese el titulo del curso" v-model="course.title">
@@ -33,6 +33,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
 export default {
     data() {
         return {
@@ -45,17 +46,26 @@ export default {
                 }
 
             },
+            user: {}
         }
     },
     created() {
         this.getCourse();
         this.getCategories();
     },
+    computed:{
+        ...mapState(['auth']),
+    },
     methods: {
         getCourse() {
-            this.axios.get('/api/v2/courses/' + this.$route.params.id + '?included=category')
+            this.axios.get('/api/v2/courses/' + this.$route.params.id + '?included=category,user')
                 .then(response => {
                     this.course = response.data
+                    this.user = response.data.user
+
+                    if(this.user.id != this.auth.user.id){
+                        this.$router.push('/courses')
+                    }
                 })
                 .catch(error => {
                     console.log(error)
